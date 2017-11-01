@@ -12,39 +12,48 @@ const Survey = mongoose.model('surveys');
 
 module.exports = app => {
 
+    app.get('/api/surveys', requireLogin, async (req, res) => {
+        const surveys = await Survey.find({ _user: req.user.id }).select({
+          recipients: false
+        });
+    
+        res.send(surveys);
+    });
+
+    app.get('/api/surveys/:surveyId/:choices', (req, res) => {
+        res.send('Thanks for voting!');
+    });
+    
     app.post('/api/surveys/webhooks', (req, res) => {
         const p = new Path('/api/surveys/:surveyId/:choice');
-        _.chain()
+    
+        _.chain(req.body)
             .map(({ email, url }) => {
                 const match = p.test(new URL(url).pathname);
                 if (match) {
-                    return { email, surveyId: match.sureveyId, choice: match.choice };
+                    return { email, surveyId: match.surveyId, choice: match.choice };
                 }
             })
             .compact()
-            .uniqBy('surveyId', 'email')
+            .uniqBy('email', 'surveyId')
             .each(({ surveyId, email, choice }) => {
                 Survey.updateOne(
                     {
-                      _id: surveyId,
-                      recipients: {
-                        $elemMatch: { email: email, responded: false }
-                      }
+                        _id: surveyId,
+                        recipients: {
+                            $elemMatch: { email, responded: false }
+                        }
                     },
                     {
-                      $inc: { [choice]: 1 },
-                      $set: { 'recipients.$.responded': true },
-                      lastResponded: new Date()
+                        $inc: { [choice]: 1 },
+                        $set: { 'recipients.$.responded': true },
+                        lastResponded: new Date()
                     }
-                  ).exec();
+                ).exec();
             })
             .value();
-
+    
         res.send({});
-    });
-
-    app.get('/api/surveys/thanks', (req, res) => {
-        res.send('Thanks for voting!');
     });
 
     app.post('/api/surveys', requireLogin, requireCredits, async (req, res) => {
