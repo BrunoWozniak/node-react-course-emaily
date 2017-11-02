@@ -19,11 +19,11 @@ class SurveyList extends Component {
                         </p>
                     </div>
                     <div className="card-action">
-                        <a>Yes: {survey.yes}</a>
-                        <a>No: {survey.no}</a>
-                        <a className="right">Last response: {
+                        <a className="blue-text">Yes: {survey.yes}</a>
+                        <a className="blue-text">No: {survey.no}</a>
+                        <a className="blue-text">(Last response: {
                             survey.yes < 1 && survey.no < 1 ? 'No response' : new Date(survey.lastResponded).toLocaleDateString()
-                        }</a>
+                        })</a>
                     </div>
                 </div>
             )
